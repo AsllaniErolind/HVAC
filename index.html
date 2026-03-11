@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowAI — Automated Systems for HVAC Companies</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080c10;
+      --surface: #0d1318;
+      --surface2: #111820;
+      --border: rgba(255,255,255,0.07);
+      --accent: #00d4ff;
+      --accent2: #0099cc;
+      --accent-glow: rgba(0, 212, 255, 0.18);
+      --text: #eef2f5;
+      --muted: #7a8a96;
+      --warm: #ff6b35;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 4px; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 4rem;
+      transition: background 0.4s, backdrop-filter 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(8, 12, 16, 0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: var(--text);
+      text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-logo .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: 0.92rem;
+      font-weight: 500; transition: color 0.2s; letter-spacing: 0.01em;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--accent); color: #000; font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 0.85rem; padding: 0.6rem 1.5rem;
+      border: none; border-radius: 6px; cursor: pointer; text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      letter-spacing: 0.03em;
+    }
+    .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,212,255,0.35); }
+
+    /* ── HERO ── */
+    #hero {
+      position: relative; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; text-align: center;
+    }
+    .hero-video-wrap {
+      position: absolute; inset: 0; z-index: 0;
+    }
+    /* ─ VIDEO PLACEHOLDER – replace <source> src with your actual video file ─ */
+    .hero-video-wrap video {
+      width: 100%; height: 100%; object-fit: cover; opacity: 0.35;
+    }
+    /* Fallback gradient shown when no video is loaded */
+    .hero-video-wrap::after {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0,212,255,0.12) 0%, transparent 70%),
+        linear-gradient(180deg, rgba(8,12,16,0.2) 0%, rgba(8,12,16,0.7) 60%, var(--bg) 100%);
+    }
+    .hero-grid {
+      position: absolute; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 80%);
+    }
+    .hero-content {
+      position: relative; z-index: 1;
+      max-width: 860px; padding: 0 2rem;
+      animation: fadeUp 1s ease both;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.25);
+      padding: 0.35rem 1rem; border-radius: 100px;
+      font-size: 0.8rem; font-weight: 500; color: var(--accent);
+      margin-bottom: 1.5rem; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .hero-badge .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 1.5s infinite; }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+    h1 em { font-style: normal; color: var(--accent); }
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      color: var(--muted); max-width: 560px; margin: 0 auto 2.5rem;
+      font-weight: 300; line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--accent); color: #000;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
+      padding: 0.9rem 2.2rem; border: none; border-radius: 8px;
+      cursor: pointer; transition: all 0.25s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,212,255,0.4); }
+    .btn-secondary {
+      background: transparent; color: var(--text);
+      font-family: 'Syne', sans-serif; font-weight: 600; font-size: 1rem;
+      padding: 0.9rem 2.2rem; border: 1px solid var(--border);
+      border-radius: 8px; cursor: pointer; transition: all 0.25s;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .hero-scroll {
+      position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      color: var(--muted); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+      animation: bounce 2s infinite;
+    }
+    .hero-scroll svg { opacity: 0.5; }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 2.5rem 4rem;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800;
+      color: var(--accent); line-height: 1;
+    }
+    .stat-label { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; font-weight: 400; }
+
+    /* ── SECTION COMMON ── */
+    section { padding: 7rem 4rem; }
+    .section-tag {
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;
+    }
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800; line-height: 1.1; letter-spacing: -0.02em;
+      margin-bottom: 1.2rem;
+    }
+    h2 em { font-style: normal; color: var(--accent); }
+    .section-sub { color: var(--muted); font-size: 1.05rem; max-width: 520px; line-height: 1.7; font-weight: 300; }
+
+    /* ── PROBLEMS ── */
+    #problems { background: var(--surface); }
+    .problems-inner { max-width: 1100px; margin: 0 auto; }
+    .problems-header { text-align: center; margin-bottom: 4rem; }
+    .problems-header .section-sub { margin: 0 auto; }
+    .pain-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+    }
+    .pain-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 2rem;
+      transition: border-color 0.3s, transform 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .pain-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--warm), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .pain-card:hover { border-color: rgba(255,107,53,0.3); transform: translateY(-4px); }
+    .pain-card:hover::before { opacity: 1; }
+    .pain-icon { font-size: 2rem; margin-bottom: 1rem; }
+    .pain-card h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .pain-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+    /* ── FEATURES ── */
+    #features { max-width: 1100px; margin: 0 auto; padding: 7rem 0; }
+    .features-layout {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; margin-top: 4rem;
+    }
+    .features-layout.reverse { direction: rtl; }
+    .features-layout.reverse > * { direction: ltr; }
+    .feature-visual {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 2.5rem; position: relative; overflow: hidden; min-height: 300px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+    }
+    .feature-visual::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 50% 50%, var(--accent-glow), transparent);
+    }
+    .feature-visual .visual-icon { font-size: 4rem; opacity: 0.8; position: relative; z-index: 1; }
+    .feature-visual .visual-label {
+      font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 700;
+      color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;
+      margin-top: 1rem; position: relative; z-index: 1;
+    }
+    .feature-list { list-style: none; margin-top: 1.5rem; }
+    .feature-list li {
+      display: flex; align-items: flex-start; gap: 0.8rem;
+      padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.95rem;
+    }
+    .feature-list li:last-child { border-bottom: none; }
+    .feature-list .check {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(0,212,255,0.15); display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .feature-list .check svg { width: 10px; height: 10px; stroke: var(--accent); stroke-width: 2.5; }
+
+    /* ── HOW IT WORKS ── */
+    #how {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .how-inner { max-width: 1000px; margin: 0 auto; text-align: center; }
+    .steps {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-top: 4rem;
+      position: relative;
+    }
+    .steps::before {
+      content: ''; position: absolute; top: 2.5rem; left: 12.5%; right: 12.5%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent2), var(--accent2), transparent);
+    }
+    .step { display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 1; }
+    .step-num {
+      width: 50px; height: 50px; border-radius: 50%;
+      background: var(--accent); color: #000;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 1.2rem;
+    }
+    .step h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 0.4rem; }
+    .step p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; }
+
+    /* ── TESTIMONIALS ── */
+    #testimonials { max-width: 1100px; margin: 0 auto; padding: 7rem 0; }
+    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 4rem; }
+    .testi-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 2rem; position: relative;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .testi-card:hover { border-color: rgba(0,212,255,0.2); transform: translateY(-4px); }
+    .testi-stars { color: #fbbf24; font-size: 0.9rem; margin-bottom: 1rem; letter-spacing: 2px; }
+    .testi-text { color: var(--muted); font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.5rem; font-style: italic; }
+    .testi-author { display: flex; align-items: center; gap: 0.8rem; }
+    .testi-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; color: #000;
+    }
+    .testi-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; }
+    .testi-role { color: var(--muted); font-size: 0.8rem; }
+
+    /* ── DEMO / CTA ── */
+    #demo {
+      background: var(--surface); border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .demo-inner { max-width: 700px; margin: 0 auto; }
+    .demo-inner h2 { margin-bottom: 1rem; }
+    .demo-inner .section-sub { margin: 0 auto 2.5rem; }
+    .demo-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 16px;
+      padding: 3rem; margin-top: 3rem; position: relative; overflow: hidden;
+    }
+    .demo-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--accent-glow), transparent);
+    }
+    .demo-card-inner { position: relative; z-index: 1; }
+    /* ── CALENDAR EMBED PLACEHOLDER ── */
+    .calendar-placeholder {
+      background: rgba(0,212,255,0.04); border: 1px dashed rgba(0,212,255,0.2);
+      border-radius: 10px; padding: 3rem 2rem; margin-bottom: 2rem;
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    }
+    .calendar-placeholder .cal-icon { font-size: 3rem; }
+    .calendar-placeholder p { color: var(--muted); font-size: 0.9rem; }
+    .calendar-placeholder code {
+      background: rgba(0,212,255,0.1); color: var(--accent); padding: 0.2rem 0.6rem;
+      border-radius: 4px; font-size: 0.8rem; font-family: monospace;
+    }
+
+    /* ── FAQ ── */
+    #faq { max-width: 760px; margin: 0 auto; padding: 7rem 2rem; }
+    .faq-header { text-align: center; margin-bottom: 3rem; }
+    .faq-item {
+      border-bottom: 1px solid var(--border); overflow: hidden;
+    }
+    .faq-q {
+      width: 100%; background: none; border: none; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500;
+      text-align: left; padding: 1.4rem 0; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: color 0.2s;
+    }
+    .faq-q:hover { color: var(--accent); }
+    .faq-q .faq-icon { font-size: 1.2rem; transition: transform 0.3s; color: var(--accent); }
+    .faq-a {
+      color: var(--muted); font-size: 0.95rem; line-height: 1.7;
+      max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s;
+    }
+    .faq-item.open .faq-a { max-height: 200px; padding-bottom: 1.2rem; }
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 3rem 4rem; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 1.5rem;
+    }
+    .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; }
+    .footer-logo span { color: var(--accent); }
+    .footer-links { display: flex; gap: 2rem; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { color: var(--muted); font-size: 0.8rem; }
+
+    /* ── MISSED CALL SECTION ── */
+    #missed-call {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      position: relative; overflow: hidden;
+      padding: 7rem 4rem;
+    }
+    #missed-call::before {
+      content: '';
+      position: absolute; top: -200px; right: -200px;
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,107,53,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .mc-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center;
+    }
+    .mc-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(255,107,53,0.12); border: 1px solid rgba(255,107,53,0.3);
+      padding: 0.35rem 1rem; border-radius: 100px;
+      font-size: 0.75rem; font-weight: 700; color: var(--warm);
+      margin-bottom: 1.2rem; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .mc-badge .dot-warm {
+      width: 6px; height: 6px; background: var(--warm); border-radius: 50%;
+      animation: pulse-warm 1.5s infinite;
+    }
+    @keyframes pulse-warm {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,53,0.5); }
+      50% { box-shadow: 0 0 0 6px rgba(255,107,53,0); }
+    }
+    .mc-text h2 { margin-bottom: 1rem; }
+    .mc-text p { color: var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; }
+    .mc-highlight-box {
+      background: rgba(255,107,53,0.07); border: 1px solid rgba(255,107,53,0.2);
+      border-left: 3px solid var(--warm);
+      border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1.5rem;
+      font-size: 0.88rem; color: var(--text); line-height: 1.6;
+    }
+    .mc-highlight-box strong { color: var(--warm); }
+
+    /* ── PHONE MOCKUP ── */
+    .phone-mockup {
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+    }
+    .phone-mockup::before {
+      content: '';
+      position: absolute; inset: -30px;
+      background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(255,107,53,0.08), transparent 70%);
+    }
+    .phone-frame {
+      width: 280px;
+      background: #0a0e12;
+      border: 2px solid rgba(255,255,255,0.12);
+      border-radius: 36px; overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+      position: relative; z-index: 1;
+    }
+    .phone-notch {
+      background: #0a0e12; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .phone-notch-bar {
+      width: 80px; height: 5px;
+      background: rgba(255,255,255,0.15); border-radius: 10px;
+    }
+    .phone-screen { background: #111820; padding: 0; }
+    .phone-header {
+      background: #0d1318; padding: 0.7rem 1rem;
+      display: flex; align-items: center; gap: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .phone-header-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, #ff6b35, #ff4500);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .phone-header-info { flex: 1; }
+    .phone-contact-name { font-size: 0.75rem; font-weight: 600; font-family: 'Syne', sans-serif; }
+    .phone-contact-sub { font-size: 0.62rem; color: var(--muted); }
+    .chat-area { padding: 0.8rem; display: flex; flex-direction: column; gap: 0.6rem; min-height: 340px; }
+    .chat-time {
+      text-align: center; font-size: 0.6rem; color: var(--muted);
+      margin: 0.3rem 0; letter-spacing: 0.05em;
+    }
+    .chat-event {
+      background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.2);
+      border-radius: 8px; padding: 0.5rem 0.7rem;
+      font-size: 0.62rem; color: var(--warm); text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    }
+    .bubble {
+      max-width: 78%; padding: 0.55rem 0.8rem;
+      border-radius: 16px; font-size: 0.68rem; line-height: 1.5;
+      animation: bubblePop 0.3s ease both;
+    }
+    @keyframes bubblePop {
+      from { opacity: 0; transform: scale(0.85) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .bubble-out {
+      background: var(--warm); color: #fff; align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .bubble-in {
+      background: rgba(255,255,255,0.07); color: var(--text); align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .bubble-typing {
+      background: rgba(255,255,255,0.07); align-self: flex-start;
+      border-bottom-left-radius: 4px; padding: 0.6rem 0.9rem;
+      display: flex; gap: 3px; align-items: center;
+    }
+    .bubble-typing span {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--muted); display: block;
+      animation: typingDot 1.2s infinite;
+    }
+    .bubble-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .bubble-typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingDot {
+      0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-3px); }
+    }
+    .phone-input-bar {
+      background: #0d1318; border-top: 1px solid var(--border);
+      padding: 0.6rem 0.8rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .phone-input-field {
+      flex: 1; background: rgba(255,255,255,0.06); border-radius: 20px;
+      padding: 0.4rem 0.7rem; font-size: 0.62rem; color: var(--muted);
+    }
+    .phone-send-btn {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--warm); display: flex; align-items: center; justify-content: center;
+    }
+    .phone-bottom-bar {
+      background: #0a0e12; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .phone-home-bar {
+      width: 60px; height: 3px;
+      background: rgba(255,255,255,0.2); border-radius: 10px;
+    }
+    /* replay button */
+    .replay-btn {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      font-size: 0.75rem; padding: 0.4rem 1rem; border-radius: 20px;
+      cursor: pointer; margin-top: 0.8rem; transition: all 0.2s;
+      display: flex; align-items: center; gap: 0.4rem; margin: 0.8rem auto 0;
+    }
+    .replay-btn:hover { border-color: var(--warm); color: var(--warm); }
+
+    @media (max-width: 900px) {
+      .mc-inner { grid-template-columns: 1fr; gap: 3rem; }
+      .phone-mockup { order: -1; }
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,212,255,0.4); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(0,212,255,0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* ── REVEAL ON SCROLL ── */
+    .reveal { transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1 !important; transform: translateY(0) !important; }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      section { padding: 5rem 1.5rem; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); padding: 2rem 1.5rem; }
+      .pain-grid { grid-template-columns: 1fr; }
+      .features-layout { grid-template-columns: 1fr; gap: 2.5rem; }
+      .features-layout.reverse { direction: ltr; }
+      .steps { grid-template-columns: repeat(2, 1fr); }
+      .steps::before { display: none; }
+      .testi-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <span class="dot"></span>Flow<span>AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="#problems">Problems</a>
+    <a href="#features">Features</a>
+    <a href="#missed-call">Missed Calls</a>
+    <a href="#how">How it Works</a>
+    <a href="#testimonials">Results</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <a href="#demo" class="nav-cta">Book a Demo →</a>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="hero-video-wrap">
+    <!--
+      ════════════════════════════════════════════════════════
+      REPLACE THE src BELOW WITH YOUR VIDEO FILE PATH OR URL.
+      Recommended: an aerial/industrial HVAC or tech B-roll.
+      ════════════════════════════════════════════════════════
+    -->
+    <video autoplay muted loop playsinline poster="">
+      <source src="YOUR_VIDEO_FILE.mp4" type="video/mp4" />
+    </video>
+  </div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="dot"></span>Built for HVAC Companies</div>
+    <h1>Stop Losing Leads.<br>Start <em>Automating</em><br>Your Growth.</h1>
+    <p class="hero-sub">
+      A done-for-you automated system that handles follow-ups, bookings, and customer
+      management — so your HVAC team can focus on the work, not the admin.
+    </p>
+    <div class="hero-actions">
+      <a href="#demo" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+        Book a Free Demo
+      </a>
+      <a href="#features" class="btn-secondary">
+        See What's Included →
+      </a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    Scroll
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+  </div>
+</section>
+
+<!-- ── STATS ── -->
+<div class="stats-bar">
+  <div class="stat reveal">
+    <div class="stat-num">3×</div>
+    <div class="stat-label">More booked jobs per month</div>
+  </div>
+  <div class="stat reveal reveal-delay-1">
+    <div class="stat-num">80%</div>
+    <div class="stat-label">Reduction in admin time</div>
+  </div>
+  <div class="stat reveal reveal-delay-2">
+    <div class="stat-num">24/7</div>
+    <div class="stat-label">Automated lead follow-up</div>
+  </div>
+  <div class="stat reveal reveal-delay-3">
+    <div class="stat-num">14 days</div>
+    <div class="stat-label">Average time to go live</div>
+  </div>
+</div>
+
+<!-- ── PROBLEMS ── -->
+<section id="problems">
+  <div class="problems-inner">
+    <div class="problems-header reveal">
+      <div class="section-tag">Sound Familiar?</div>
+      <h2>HVAC owners are leaving <em>money on the table</em> every single day</h2>
+      <p class="section-sub">If any of these hit close to home, you're the exact person this system was built for.</p>
+    </div>
+    <div class="pain-grid">
+      <div class="pain-card reveal reveal-delay-1">
+        <div class="pain-icon">📞</div>
+        <h3>Leads go cold before you call back</h3>
+        <p>You miss a call on a job site. By the time you're free, they've already booked a competitor. Every missed call is lost revenue.</p>
+      </div>
+      <div class="pain-card reveal reveal-delay-2">
+        <div class="pain-icon">🗓️</div>
+        <h3>Scheduling is a constant headache</h3>
+        <p>Back-and-forth texts, double bookings, no-shows. Your dispatcher is swamped and your calendar is chaos.</p>
+      </div>
+      <div class="pain-card reveal reveal-delay-3">
+        <div class="pain-icon">📊</div>
+        <h3>No visibility into your pipeline</h3>
+        <p>You don't know how many leads you have, which ones are hot, or what your close rate is. Running blind costs you growth.</p>
+      </div>
+      <div class="pain-card reveal reveal-delay-1">
+        <div class="pain-icon">🔄</div>
+        <h3>No system for repeat business</h3>
+        <p>Past customers forget you exist. Without automated reminders for maintenance or tune-ups, they call whoever shows up on Google first.</p>
+      </div>
+      <div class="pain-card reveal reveal-delay-2">
+        <div class="pain-icon">⭐</div>
+        <h3>Reviews are inconsistent</h3>
+        <p>You do great work but asking for reviews feels awkward. Your online reputation doesn't reflect the quality you deliver.</p>
+      </div>
+      <div class="pain-card reveal reveal-delay-3">
+        <div class="pain-icon">💸</div>
+        <h3>Ad spend with no follow-through</h3>
+        <p>You're paying for Google or Facebook ads but have no system to convert those leads into actual booked jobs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section style="max-width:1100px; margin:0 auto;">
+  <div id="features">
+    <div class="section-tag reveal">The System</div>
+    <h2 class="reveal">Everything you need to <em>automate</em> and scale</h2>
+    <p class="section-sub reveal">One unified platform, custom-built for your HVAC business — no tech skills required.</p>
+  </div>
+
+  <div class="features-layout" style="margin-top:4rem;">
+    <div class="feature-visual reveal">
+      <div class="visual-icon">🤖</div>
+      <div class="visual-label">AI Response Engine</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="section-tag">Lead Capture & Follow-Up</div>
+      <h2 style="font-size:1.8rem;">Respond to every lead <em>instantly</em> — even at 2 AM</h2>
+      <p style="color:var(--muted); margin-bottom:1.5rem; font-size:0.95rem; line-height:1.7;">
+        The moment someone fills out your form, calls your number, or messages your Facebook page — they get an instant, personalized response. Your leads never go cold again.
+      </p>
+      <ul class="feature-list">
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Auto-SMS & email within 60 seconds of inquiry</li>
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Multi-touch follow-up sequences (Day 1, 3, 7)</li>
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>AI-powered qualifying questions to filter serious buyers</li>
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Works with Facebook, Google, your website & more</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="features-layout reverse" style="margin-top:5rem;">
+    <div class="feature-visual reveal">
+      <div class="visual-icon">📅</div>
+      <div class="visual-label">Smart Scheduling</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="section-tag">Automated Booking</div>
+      <h2 style="font-size:1.8rem;">Let customers book themselves — <em>no back-and-forth</em></h2>
+      <p style="color:var(--muted); margin-bottom:1.5rem; font-size:0.95rem; line-height:1.7;">
+        Customers pick a time that works for them. Your calendar syncs automatically. Reminders go out. No-shows drop dramatically.
+      </p>
+      <ul class="feature-list">
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Online booking page branded to your business</li>
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Automated reminders (SMS + email) before every job</li>
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Two-way calendar sync (Google, Outlook, iCal)</li>
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Technician dispatch notifications included</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="features-layout" style="margin-top:5rem;">
+    <div class="feature-visual reveal">
+      <div class="visual-icon">⭐</div>
+      <div class="visual-label">Reputation Engine</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="section-tag">Reviews & Reputation</div>
+      <h2 style="font-size:1.8rem;">Build a 5-star reputation on <em>autopilot</em></h2>
+      <p style="color:var(--muted); margin-bottom:1.5rem; font-size:0.95rem; line-height:1.7;">
+        After every completed job, your system automatically asks happy customers for a Google review — at exactly the right moment, in exactly the right way.
+      </p>
+      <ul class="feature-list">
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Post-job review request SMS sent automatically</li>
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Direct link to your Google Business profile</li>
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Negative feedback flagged before it goes public</li>
+        <li><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span>Review dashboard so you never miss a response</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── MISSED CALL TEXT BACK ── -->
+<section id="missed-call">
+  <div class="mc-inner">
+    <div class="mc-text reveal">
+      <div class="mc-badge"><span class="dot-warm"></span>Game Changer</div>
+      <div class="section-tag">Missed Call Text Back</div>
+      <h2>Miss a call? Your phone <em>texts them back</em> in seconds — automatically.</h2>
+      <p>
+        When you're on the roof, under a unit, or just slammed — you can't always pick up.
+        But that caller is about to Google the next HVAC company. Our system detects every
+        missed call and fires off a personalised SMS <strong style="color:var(--text);">within 20 seconds</strong>,
+        keeping the conversation alive and the lead in your pipeline.
+      </p>
+      <div class="mc-highlight-box">
+        📊 <strong>78% of customers</strong> book with the first company that responds.
+        With Missed Call Text Back, that company is <strong>always you</strong>.
+      </div>
+      <ul class="feature-list">
+        <li><span class="check" style="background:rgba(255,107,53,0.15);"><svg viewBox="0 0 12 12" style="stroke:#ff6b35;"><polyline points="2,6 5,9 10,3"/></svg></span>Auto-text fires within 20 seconds of a missed call</li>
+        <li><span class="check" style="background:rgba(255,107,53,0.15);"><svg viewBox="0 0 12 12" style="stroke:#ff6b35;"><polyline points="2,6 5,9 10,3"/></svg></span>Custom message with your business name &amp; booking link</li>
+        <li><span class="check" style="background:rgba(255,107,53,0.15);"><svg viewBox="0 0 12 12" style="stroke:#ff6b35;"><polyline points="2,6 5,9 10,3"/></svg></span>Two-way SMS conversation continues in your inbox</li>
+        <li><span class="check" style="background:rgba(255,107,53,0.15);"><svg viewBox="0 0 12 12" style="stroke:#ff6b35;"><polyline points="2,6 5,9 10,3"/></svg></span>Works on any phone — no app or hardware needed</li>
+        <li><span class="check" style="background:rgba(255,107,53,0.15);"><svg viewBox="0 0 12 12" style="stroke:#ff6b35;"><polyline points="2,6 5,9 10,3"/></svg></span>After-hours calls handled overnight automatically</li>
+      </ul>
+      <div style="margin-top:2rem;">
+        <a href="#demo" class="btn-primary" style="background:var(--warm);">
+          See It Live in Your Demo →
+        </a>
+      </div>
+    </div>
+
+    <div class="phone-mockup reveal reveal-delay-2">
+      <div>
+        <div class="phone-frame">
+          <div class="phone-notch"><div class="phone-notch-bar"></div></div>
+          <div class="phone-screen">
+            <div class="phone-header">
+              <div class="phone-header-avatar">AC</div>
+              <div class="phone-header-info">
+                <div class="phone-contact-name">Arctic Cool HVAC</div>
+                <div class="phone-contact-sub">Business SMS</div>
+              </div>
+            </div>
+            <div class="chat-area" id="chatArea">
+              <div class="chat-time">TODAY · 2:34 PM</div>
+              <div class="chat-event">
+                📵 Missed call from +1 (555) 847-2291
+              </div>
+            </div>
+            <div class="phone-input-bar">
+              <div class="phone-input-field">Reply…</div>
+              <div class="phone-send-btn">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="phone-bottom-bar"><div class="phone-home-bar"></div></div>
+        </div>
+        <button class="replay-btn" onclick="runChatAnimation()">
+          ↺ Replay animation
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section id="how">
+  <div class="how-inner">
+    <div class="section-tag reveal">The Process</div>
+    <h2 class="reveal">Up and running in <em>2 weeks</em></h2>
+    <p class="section-sub reveal" style="margin: 0 auto;">We handle all the setup. You just show up for the demo and we take it from there.</p>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1</div>
+        <h3>Book Your Demo</h3>
+        <p>30-minute call where we map out your exact workflow and show you the system live.</p>
+      </div>
+      <div class="step reveal reveal-delay-1">
+        <div class="step-num">2</div>
+        <h3>Custom Setup</h3>
+        <p>We build and configure everything specifically for your business — branded, tested, ready.</p>
+      </div>
+      <div class="step reveal reveal-delay-2">
+        <div class="step-num">3</div>
+        <h3>Go Live</h3>
+        <p>Your system launches. Leads start getting followed up. Jobs start getting booked automatically.</p>
+      </div>
+      <div class="step reveal reveal-delay-3">
+        <div class="step-num">4</div>
+        <h3>Watch It Grow</h3>
+        <p>Track your metrics in your dashboard. We optimize monthly to keep your results climbing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ── -->
+<section id="testimonials" style="max-width:1100px; margin:0 auto; padding: 7rem 0;">
+  <div class="section-tag reveal" style="text-align:center;">Real Results</div>
+  <h2 class="reveal" style="text-align:center;">HVAC owners who made the switch</h2>
+  <div class="testi-grid">
+    <div class="testi-card reveal">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"We were losing at least 5-6 leads a week just from slow follow-up. Within the first month of using this system, our booked jobs went up 40%. It basically paid for itself in the first week."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">MR</div>
+        <div>
+          <div class="testi-name">Mike R.</div>
+          <div class="testi-role">Owner, Arctic Cool HVAC — Texas</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card reveal reveal-delay-1">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"The automated scheduling alone saved my dispatcher 3 hours a day. My guys get a text the night before, customers get reminders, and no-shows are almost zero now. Incredible."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">JS</div>
+        <div>
+          <div class="testi-name">Jake S.</div>
+          <div class="testi-role">Owner, Summit HVAC — Colorado</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card reveal reveal-delay-2">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">"We went from 12 Google reviews to 87 in two months without us doing anything. Our phone rings a lot more from organic search now. The reputation tool alone is worth it."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">DL</div>
+        <div>
+          <div class="testi-name">Diana L.</div>
+          <div class="testi-role">Owner, Precision Air — Florida</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DEMO / CTA ── -->
+<section id="demo">
+  <div class="demo-inner">
+    <div class="section-tag reveal">Book a Call</div>
+    <h2 class="reveal">Ready to see it <em>in action</em>?</h2>
+    <p class="section-sub reveal">
+      Book a free 30-minute demo. We'll show you the exact system running live and build a custom plan for your business — no pressure, no obligation.
+    </p>
+    <div class="demo-card reveal">
+      <div class="demo-card-inner">
+
+        <!-- ═══════════════════════════════════════════════════════════
+             CALENDAR EMBED AREA
+             Replace the placeholder below with your actual booking tool.
+
+             OPTION A — Calendly:
+             <div class="calendly-inline-widget"
+                  data-url="https://calendly.com/YOUR_USERNAME/30min"
+                  style="min-width:320px;height:630px;"></div>
+             <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
+
+             OPTION B — Cal.com:
+             <iframe src="https://cal.com/YOUR_USERNAME/30min?embed=true"
+                     width="100%" height="600" frameborder="0"></iframe>
+
+             OPTION C — GoHighLevel / custom booking link:
+             <iframe src="YOUR_BOOKING_LINK"
+                     width="100%" height="600" frameborder="0"
+                     style="border-radius:8px;border:none;"></iframe>
+        ═══════════════════════════════════════════════════════════ -->
+
+        <div class="calendar-placeholder">
+          <div class="cal-icon">📅</div>
+          <strong style="font-family:'Syne',sans-serif; font-size:1.1rem;">Your Booking Calendar Goes Here</strong>
+          <p>Replace this block with your Calendly, Cal.com, or GoHighLevel embed.</p>
+          <p>See comments in the source code for exact embed instructions.</p>
+          <code>&lt;!-- BOOKING EMBED --&gt;</code>
+        </div>
+
+        <a href="#" class="btn-primary" style="width:100%; justify-content:center; font-size:1.05rem; padding:1rem 2rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+          Book My Free 30-Minute Demo
+        </a>
+        <p style="color:var(--muted); font-size:0.82rem; margin-top:1rem;">
+          ✓ No sales pressure &nbsp;·&nbsp; ✓ Free custom audit &nbsp;·&nbsp; ✓ See live results
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section id="faq">
+  <div class="faq-header reveal">
+    <div class="section-tag">Questions</div>
+    <h2>Frequently asked</h2>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q">
+      How long does setup take?
+      <span class="faq-icon">+</span>
+    </button>
+    <div class="faq-a">Most clients are fully live within 10–14 days. After the demo call we handle 100% of the technical setup — you just need to review and approve the final configuration before we flip the switch.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q">
+      Do I need any technical skills?
+      <span class="faq-icon">+</span>
+    </button>
+    <div class="faq-a">Zero. If you can send a text message, you can use this system. Everything is built and managed for you. We also provide a simple dashboard so you can see your leads, bookings, and reviews at a glance.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q">
+      What software does it integrate with?
+      <span class="faq-icon">+</span>
+    </button>
+    <div class="faq-a">We integrate with your existing tools — Google, Outlook, Facebook, ServiceTitan, Jobber, Housecall Pro, and more. If you're not using any software yet, we'll set everything up from scratch.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q">
+      Is there a contract or commitment?
+      <span class="faq-icon">+</span>
+    </button>
+    <div class="faq-a">We offer month-to-month options as well as discounted annual plans. We're confident in the results, so we don't need to lock you in — but most clients stay because it works.</div>
+  </div>
+  <div class="faq-item">
+    <button class="faq-q">
+      What if I'm already using another CRM or software?
+      <span class="faq-icon">+</span>
+    </button>
+    <div class="faq-a">No problem. We either integrate directly with what you're using or migrate your data into a more powerful system at no extra cost. We'll assess this on the demo call and recommend the best path forward.</div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-logo">Flow<span>AI</span></div>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#demo">Book Demo</a>
+    <a href="/cdn-cgi/l/email-protection#e8808d848487a88e84879f8981c68b8785">Contact</a>
+    <a href="#">Privacy</a>
+  </div>
+  <div class="footer-copy">© 2025 FlowAI. All rights reserved.</div>
+</footer>
+
+
+<script>
+  // ── NAV SCROLL ──
+  document.addEventListener('DOMContentLoaded', function() {
+
+    var navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 60) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // ── REVEAL ON SCROLL ──
+    // Strategy: just make everything visible. No hide/show gymnastics.
+    var reveals = document.querySelectorAll('.reveal');
+    reveals.forEach(function(el) {
+      el.style.opacity = '1';
+      el.style.transform = 'none';
+      el.classList.add('visible');
+    });
+
+    // ── FAQ ACCORDION ──
+    document.querySelectorAll('.faq-q').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var item = btn.parentElement;
+        var isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item.open').forEach(function(i) { i.classList.remove('open'); });
+        if (!isOpen) item.classList.add('open');
+      });
+    });
+
+    // ── MISSED CALL CHAT ANIMATION ──
+    var chatMessages = [
+      { type: 'out', text: 'Hey! Sorry we missed your call \u{1F60A} This is Arctic Cool HVAC. How can we help you today?', delay: 800 },
+      { type: 'in',  text: 'Hi! My AC stopped working and it\'s really hot in here \u{1F605}', delay: 2200 },
+      { type: 'out', text: 'Oh no! We can get a tech out to you today. What\'s your zip code?', delay: 3800 },
+      { type: 'in',  text: '78701', delay: 5000 },
+      { type: 'out', text: 'Perfect — we have a 3pm slot today! Book here: arcticcool.com/book', delay: 6400 },
+      { type: 'in',  text: 'Just booked! Thank you so much!', delay: 8000 },
+    ];
+
+    var chatTimers = [];
+    window.runChatAnimation = function() {
+      var area = document.getElementById('chatArea');
+      if (!area) return;
+      chatTimers.forEach(function(t) { clearTimeout(t); });
+      chatTimers = [];
+      area.innerHTML = '<div class="chat-time">TODAY · 2:34 PM</div><div class="chat-event">\uD83D\uDCF5 Missed call from +1 (555) 847-2291</div>';
+
+      chatMessages.forEach(function(msg) {
+        var t = setTimeout(function() {
+          var typing = area.querySelector('.bubble-typing');
+          if (typing) typing.remove();
+
+          var bubble = document.createElement('div');
+          bubble.className = 'bubble bubble-' + msg.type;
+          bubble.textContent = msg.text;
+          area.appendChild(bubble);
+          area.scrollTop = area.scrollHeight;
+
+          var idx = chatMessages.indexOf(msg);
+          var next = chatMessages[idx + 1];
+          if (next && next.type === 'in') {
+            var t2 = setTimeout(function() {
+              var typ = document.createElement('div');
+              typ.className = 'bubble bubble-typing';
+              typ.innerHTML = '<span></span><span></span><span></span>';
+              area.appendChild(typ);
+              area.scrollTop = area.scrollHeight;
+            }, 300);
+            chatTimers.push(t2);
+          }
+        }, msg.delay);
+        chatTimers.push(t);
+      });
+    };
+
+    // Auto-run chat when section enters view
+    var mcSection = document.getElementById('missed-call');
+    var mcPlayed = false;
+    if (mcSection && 'IntersectionObserver' in window) {
+      var mcObs = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting && !mcPlayed) {
+          mcPlayed = true;
+          setTimeout(window.runChatAnimation, 600);
+        }
+      }, { threshold: 0.3 });
+      mcObs.observe(mcSection);
+    }
+
+    // ── SMOOTH SCROLL ──
+    document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+      a.addEventListener('click', function(e) {
+        var href = a.getAttribute('href');
+        if (href === '#') return;
+        var target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+  }); // end DOMContentLoaded
+</script>
+</body>
+</html>
